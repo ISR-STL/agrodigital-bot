@@ -1,5 +1,6 @@
 import datetime
 import gspread
+import os  # ✅ Para ler variáveis de ambiente do Railway
 from oauth2client.service_account import ServiceAccountCredentials
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -11,14 +12,18 @@ from telegram.ext import (
     ContextTypes
 )
 
-# ======================= CONFIGURAÇÕES PRINCIPAIS =======================
-BOT_TOKEN = "SEU_TOKEN_AQUI"  # Substitua pelo token correto do Railway
-PLANILHA_URL = "https://docs.google.com/spreadsheets/d/1IiHufHXV4JqZG5XIn_GfbeZJXewR0RgW7SgLD5/edit?usp=sharing"
+# =================== CONFIGURAÇÕES PRINCIPAIS ===================
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # ✅ Agora pega o token automaticamente do Railway
+
+if not BOT_TOKEN:
+    raise ValueError("❌ ERRO: BOT_TOKEN não foi encontrado! Configure no Railway.")
+
+PLANILHA_URL = "https://docs.google.com/spreadsheets/d/1i1HuHfXV4JqZG5XIn_GfbeZJXewR0RgN7SgLD5/edit?usp=sharing"
 GOOGLE_FORMS_URL = "https://forms.gle/zVJN3BBuZgzCcGB36"
 PAINEL_URL = "https://agrodigital5ponto0.com"
 BSC_SCAN_URL = "https://bscscan.com/address/0x9ea22b56062f5a8e870ffed967987a5a5edf8dd#code"
 
-# ======================= CONEXÃO GOOGLE SHEETS =======================
+# =================== CONEXÃO GOOGLE SHEETS ===================
 def conectar_planilha():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
@@ -26,92 +31,96 @@ def conectar_planilha():
     sheet = client.open_by_url(PLANILHA_URL).sheet1
     return sheet
 
-# ======================= MENSAGENS MULTILÍNGUES =======================
+def registrar_acao(user, idioma, acao, valor="-"):
+    try:
+        sheet = conectar_planilha()
+        agora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        sheet.append_row([agora, user.first_name, user.id, idioma, acao, valor])
+    except Exception as e:
+        print(f"Erro ao registrar ação: {e}")
+
+# =================== MENSAGENS MULTILÍNGUES ===================
 mensagens = {
     "en": {
-        "welcome": "🌱 Welcome to AgroDigital Club!\n\n🚀 Here you will find exclusive opportunities in digital agribusiness.\n\n💡 Join the exclusive pre-sale of AgroDigital tokens and secure your strategic market position.\n\nChoose an option below 👇",
-        "how_to_buy": "🌍 3 STEPS TO BUY TOKENS!\n\n✅ Send **BNB (BSC Network)** to:\n`0xd85f998f4c136b46AC9a0b1091913B105f002`\n✅ Fill the whitelist here:\n" + GOOGLE_FORMS_URL + "\n✅ Tokens will be distributed after pre-sale.\n\n⏳ Limited spots available!",
-        "enter_value": "💰 Enter the amount you want to invest (min 100 USD)",
-        "default_reply": "🤖 I didn’t understand your message, here’s the menu again 👇",
-        "menu_buttons": ["🌍 How to buy", "📄 Open whitelist form", "💵 Enter amount", "📊 Access panel", "🔗 View contract on BscScan", "🌎 Change language"]
+        "welcome": "🌱 Welcome to AgroDigital Club!\n🚀 Here you will find exclusive digital agribusiness opportunities.\n💡 Join the pre-sale and secure your strategic market position.\nChoose an option below 👇",
+        "how_to_buy": "🌍 3 STEPS TO BUY TOKENS:\n✅ Send *BNB (BSC Network)* to the official address.\n✅ Fill the whitelist here:\n{GOOGLE_FORMS_URL}\n✅ Tokens will be distributed after pre-sale.\n⏳ Only 48h and 500 spots!",
+        "enter_value": "💰 Enter the amount you want to invest (min 100 USD)*",
+        "default_reply": "🤖 I didn’t understand your message, here’s the main menu again 👇"
     },
     "pt": {
-        "welcome": "🌱 Bem-vindo(a) ao AgroDigital Club!\n\n🚀 Aqui você encontra oportunidades exclusivas no agronegócio digital.\n\n💡 Participe da pré-venda exclusiva dos tokens AgroDigital e garanta posição estratégica no mercado.\n\nEscolha uma opção abaixo 👇",
-        "how_to_buy": "🌍 3 PASSOS PARA COMPRAR TOKENS!\n\n✅ Envie **BNB (Rede BSC)** para:\n`0xd85f998f4c136b46AC9a0b1091913B105f002`\n✅ Preencha o formulário aqui:\n" + GOOGLE_FORMS_URL + "\n✅ Tokens serão distribuídos após a pré-venda.\n\n⏳ Vagas limitadas!",
-        "enter_value": "💰 Digite o valor que deseja investir (mínimo 100 USD)",
-        "default_reply": "🤖 Não entendi sua mensagem, aqui está o menu novamente 👇",
-        "menu_buttons": ["🌍 Como comprar", "📄 Abrir formulário", "💵 Digitar valor que deseja investir", "📊 Acessar painel", "🔗 Ver contrato na BscScan", "🌎 Trocar idioma"]
+        "welcome": "🌱 Bem-vindo(a) ao AgroDigital Club!\n🚀 Aqui você encontra oportunidades exclusivas no agronegócio digital.\n💡 Participe da pré-venda e garanta posição estratégica no mercado.\nEscolha uma opção abaixo 👇",
+        "how_to_buy": "🌍 3 PASSOS PARA COMPRAR TOKENS:\n✅ Envie *BNB (Rede BSC)* para o endereço oficial.\n✅ Preencha a whitelist:\n{GOOGLE_FORMS_URL}\n✅ Receba os tokens após o fim da pré-venda.\n⏳ Apenas 48h e 500 vagas!",
+        "enter_value": "💰 Digite o valor que deseja investir (mínimo 100 USD)*",
+        "default_reply": "🤖 Não entendi sua mensagem, aqui está o menu principal novamente 👇"
     },
     "es": {
-        "welcome": "🌱 ¡Bienvenido(a) al AgroDigital Club!\n\n🚀 Aquí encontrarás oportunidades exclusivas en el agronegocio digital.\n\n💡 Participa en la preventa exclusiva de los tokens AgroDigital y asegura tu posición estratégica en el mercado.\n\nElige una opción abajo 👇",
-        "how_to_buy": "🌍 3 PASOS PARA COMPRAR TOKENS!\n\n✅ Envía **BNB (Red BSC)** a:\n`0xd85f998f4c136b46AC9a0b1091913B105f002`\n✅ Completa el formulario aquí:\n" + GOOGLE_FORMS_URL + "\n✅ Los tokens serán distribuidos después de la preventa.\n\n⏳ ¡Cupos limitados!",
-        "enter_value": "💰 Ingrese el monto que desea invertir (mínimo 100 USD)",
-        "default_reply": "🤖 No entendí tu mensaje, aquí está el menú nuevamente 👇",
-        "menu_buttons": ["🌍 Cómo comprar", "📄 Abrir formulario", "💵 Ingresar monto a invertir", "📊 Acceder al panel", "🔗 Ver contrato en BscScan", "🌎 Cambiar idioma"]
+        "welcome": "🌱 Bienvenido(a) al AgroDigital Club!\n🚀 Aquí encontrarás oportunidades exclusivas en el agronegocio digital.\n💡 Participa en la preventa y asegura tu posición estratégica en el mercado.\nElige una opción abajo 👇",
+        "how_to_buy": "🌍 3 PASOS PARA COMPRAR TOKENS:\n✅ Envía *BNB (Red BSC)* a la dirección oficial.\n✅ Completa la whitelist:\n{GOOGLE_FORMS_URL}\n✅ Recibe los tokens al finalizar la preventa.\n⏳ ¡Solo 48h y 500 plazas!",
+        "enter_value": "💰 Ingrese el monto que desea invertir (mínimo 100 USD)*",
+        "default_reply": "🤖 No entendí tu mensaje, aquí está el menú principal nuevamente 👇"
     }
 }
 
-# ======================= TELAS =======================
+# =================== ESCOLHA DE IDIOMA ===================
 async def ask_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🇺🇸 English", callback_data="set_lang_en")],
         [InlineKeyboardButton("🇧🇷 Português", callback_data="set_lang_pt")],
         [InlineKeyboardButton("🇪🇸 Español", callback_data="set_lang_es")]
     ]
-    await update.message.reply_text("🌎 Please select your language / Por favor, escolha seu idioma / Seleccione su idioma:", reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        "🌍 Please select your language / Por favor selecione seu idioma / Por favor seleccione su idioma:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
+# =================== MENU PRINCIPAL ===================
 async def show_menu(update_or_query, idioma="en", edit=False):
-    buttons = [
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][0], callback_data="how_to_buy")],
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][1], url=GOOGLE_FORMS_URL)],
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][2], callback_data="enter_value")],
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][3], url=PAINEL_URL)],
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][4], url=BSC_SCAN_URL)],
-        [InlineKeyboardButton(mensagens[idioma]["menu_buttons"][5], callback_data="change_lang")]
-    ]
     text = mensagens[idioma]["welcome"]
-    markup = InlineKeyboardMarkup(buttons)
+    keyboard = [
+        [InlineKeyboardButton("🌍 " + ("How to buy" if idioma == "en" else "Como comprar" if idioma == "pt" else "Cómo comprar"), callback_data="how_to_buy")],
+        [InlineKeyboardButton("📄 " + ("Open whitelist form" if idioma == "en" else "Abrir formulário" if idioma == "pt" else "Abrir formulario"), url=GOOGLE_FORMS_URL)],
+        [InlineKeyboardButton("💰 " + ("Enter the amount you want to invest" if idioma == "en" else "Digitar valor que deseja investir" if idioma == "pt" else "Ingresar monto a invertir"), callback_data="enter_value")],
+        [InlineKeyboardButton("📊 Access panel", url=PAINEL_URL)],
+        [InlineKeyboardButton("🔗 View contract on BscScan", url=BSC_SCAN_URL)],
+        [InlineKeyboardButton("🌍 " + ("Change language" if idioma == "en" else "Trocar idioma" if idioma == "pt" else "Cambiar idioma"), callback_data="change_lang")]
+    ]
+    markup = InlineKeyboardMarkup(keyboard)
 
-    if isinstance(update_or_query, Update):
-        await update_or_query.message.reply_text(text, reply_markup=markup)
-    else:
+    if edit and hasattr(update_or_query, "edit_message_text"):
         await update_or_query.edit_message_text(text, reply_markup=markup)
+    else:
+        await update_or_query.message.reply_text(text, reply_markup=markup)
 
-# ======================= HANDLERS =======================
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Sempre força escolha de idioma na primeira vez
-    await ask_language(update, context)
-
+# =================== CALLBACK BOTÕES ===================
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
-    # Troca de idioma
-    if query.data.startswith("set_lang_"):
-        new_lang = query.data.replace("set_lang_", "")
-        context.user_data["idioma"] = new_lang
-        await show_menu(query, new_lang, edit=True)
-        return
-
-    # Mostrar menu para trocar idioma
-    if query.data == "change_lang":
-        await ask_language(query, context)
-        return
+    data = query.data
 
     idioma = context.user_data.get("idioma", "en")
 
-    if query.data == "how_to_buy":
-        await query.edit_message_text(mensagens[idioma]["how_to_buy"])
-    elif query.data == "enter_value":
+    if data == "how_to_buy":
+        await query.edit_message_text(mensagens[idioma]["how_to_buy"].replace("{GOOGLE_FORMS_URL}", GOOGLE_FORMS_URL))
+    elif data == "enter_value":
         await query.edit_message_text(mensagens[idioma]["enter_value"])
+    elif data == "change_lang":
+        await ask_language(update, context)
+    elif data.startswith("set_lang_"):
+        idioma = data.replace("set_lang_", "")
+        context.user_data["idioma"] = idioma
+        await show_menu(query, idioma, edit=True)
 
+# =================== MENSAGENS LIVRES ===================
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     idioma = context.user_data.get("idioma", "en")
-    # Fallback para qualquer mensagem fora do fluxo
     await update.message.reply_text(mensagens[idioma]["default_reply"])
     await show_menu(update, idioma)
 
-# ======================= MAIN =======================
+# =================== START BOT ===================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await ask_language(update, context)
+
+# =================== MAIN ===================
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
