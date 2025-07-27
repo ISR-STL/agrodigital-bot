@@ -1,4 +1,3 @@
-import os
 import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -12,13 +11,14 @@ from telegram.ext import (
     ContextTypes
 )
 
-# ==================== TOKEN VIA VARIÁVEL DE AMBIENTE ====================
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Agora lê diretamente do Railway ✅
+# ==================== CONFIGURAÇÕES ====================
+BOT_TOKEN = "SEU_TOKEN_AQUI"  # Substitua pelo token correto
 PLANILHA_URL = "https://docs.google.com/spreadsheets/d/1iHuIhFXV4JqZG5XIn_GfbeZJXewR0rWg7SgLD5F_Lfk/edit?usp=sharing"
 GOOGLE_FORMS_URL = "https://forms.gle/zVJN3BBuZgzCcGB36"
 PAINEL_URL = "https://agrodigital-panel-git-main-isr-stls-projects.vercel.app/"
+BSCSCAN_URL = "https://bscscan.com/address/0x9ea22b56062f5a8e870ffded967987a5a5edf8d8#code"
 
-# ==================== CONEXÃO GOOGLE SHEETS =======================
+# ==================== CONEXÃO GOOGLE SHEETS ====================
 def conectar_planilha():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
@@ -40,131 +40,124 @@ def registrar_acao(user, idioma, acao, valor="--"):
     except Exception as e:
         print(f"Erro ao registrar na planilha: {e}")
 
-# ==================== MENSAGENS MULTILÍNGUES ========================
+# ==================== MENSAGENS POR IDIOMA ====================
 mensagens = {
-    "pt": {
-        "bemvindo": "🌱 Bem-vindo(a) ao *AgroDigital Club*!\n\n🚀 Aqui você encontra oportunidades exclusivas no agronegócio digital com potencial de crescimento global.\n\n💡 *Participe da pré-venda do token SoByen (SBN) e garanta posição estratégica no mercado.*\n\nEscolha uma opção abaixo 👇",
-        "botoes": [
-            ("✅ Como comprar", "comprar"),
-            ("📄 Abrir formulário", "formulario"),
-            ("💰 Informar valor que deseja investir", "investir"),
-            ("📊 Acessar painel", "painel")
-        ],
-        "como_comprar": f"🔥 *3 PASSOS RÁPIDOS PARA GARANTIR SEUS TOKENS SBN!*\n\n✅ 1. Envie **BNB (Rede BSC)** para:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n\n✅ 2. Preencha a whitelist:\n{GOOGLE_FORMS_URL}\n\n✅ 3. Receba seus tokens automaticamente após o fim da pré-venda.\n\n⏳ *Só 48h e apenas 500 vagas disponíveis!*"
-    },
     "en": {
-        "bemvindo": "🌍 Welcome to *AgroDigital Club*!\n\n🚀 Here you will find exclusive opportunities in digital agribusiness with global growth potential.\n\n💡 *Join the pre-sale of the SoByen (SBN) token and secure your strategic position in the market.*\n\nChoose an option below 👇",
-        "botoes": [
+        "menu": "🌍 *Welcome to AgroDigital Club!*\n\n🚀 Exclusive opportunities in digital agribusiness with global growth potential.\n\n💡 *Join the pre-sale of SoByen (SBN) and secure your position.*\n\nChoose an option below 👇",
+        "buttons": [
             ("🌍 How to buy", "comprar"),
             ("📄 Open whitelist form", "formulario"),
             ("💰 Enter the amount you want to invest", "investir"),
-            ("📊 Access panel", "painel")
+            ("📊 Access panel", "painel"),
+            ("✅ View token contract", "contrato")
         ],
-        "como_comprar": f"🔥 *3 QUICK STEPS TO GET YOUR SBN TOKENS!*\n\n✅ 1. Send **BNB (BSC Network)** to:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n\n✅ 2. Fill the whitelist:\n{GOOGLE_FORMS_URL}\n\n✅ 3. Tokens will be delivered automatically after pre-sale ends.\n\n⏳ *Only 48h and 500 spots available!*"
+        "back": "⬅️ Return",
+        "lang_menu": "🌍 *Choose your language:*",
+        "como_comprar": f"🔥 *3 QUICK STEPS TO GET YOUR SBN TOKENS!*\n\n✅ Send **BNB (BSC Network)** to:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Fill the whitelist:\n{GOOGLE_FORMS_URL}\n✅ Receive tokens after pre-sale.",
+        "contrato_msg": f"✅ *Verified on BscScan for your security:*\n{BSCSCAN_URL}",
+        "painel_msg": f"📊 Access the full control panel here:\n{PAINEL_URL}",
+        "form_msg": f"📄 The form will open in English for global standardization:\n{GOOGLE_FORMS_URL}",
+        "invest_msg": "💵 *Enter the amount you want to invest (min 1,000 USD, max 5,000 USD)* and click ✅ Send Proposal."
+    },
+    "pt": {
+        "menu": "🌱 *Bem-vindo(a) ao AgroDigital Club!*\n\n🚀 Oportunidades exclusivas no agronegócio digital com potencial global.\n\n💡 *Participe da pré-venda do token SoByen (SBN).*",
+        "buttons": [
+            ("✅ Como comprar", "comprar"),
+            ("📄 Abrir formulário whitelist", "formulario"),
+            ("💰 Informar valor que deseja investir", "investir"),
+            ("📊 Acessar painel", "painel"),
+            ("✅ Ver contrato do token", "contrato")
+        ],
+        "back": "⬅️ Voltar",
+        "lang_menu": "🌍 *Escolha seu idioma:*",
+        "como_comprar": f"🔥 *3 PASSOS PARA GARANTIR SEUS TOKENS SBN!*\n\n✅ Envie **BNB (Rede BSC)** para:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Preencha a whitelist:\n{GOOGLE_FORMS_URL}\n✅ Receba os tokens após a pré-venda.",
+        "contrato_msg": f"✅ *Contrato verificado na BscScan para sua segurança:*\n{BSCSCAN_URL}",
+        "painel_msg": f"📊 Acesse o painel completo de controle aqui:\n{PAINEL_URL}",
+        "form_msg": f"📄 O formulário abrirá padronizado em inglês:\n{GOOGLE_FORMS_URL}",
+        "invest_msg": "💵 *Digite o valor que pretende investir (mínimo 1.000 USD e máximo 5.000 USD)* e clique ✅ Enviar Proposta."
     },
     "es": {
-        "bemvindo": "🌾 ¡Bienvenido(a) a *AgroDigital Club*!\n\n🚀 Aquí encontrará oportunidades exclusivas en el agronegocio digital con potencial de crecimiento global.\n\n💡 *Participe en la preventa del token SoByen (SBN) y asegure una posición estratégica en el mercado.*\n\nSeleccione una opción abajo 👇",
-        "botoes": [
+        "menu": "🌾 *¡Bienvenido(a) a AgroDigital Club!*\n\n🚀 Oportunidades exclusivas en el agronegocio digital con potencial global.\n\n💡 *Participa en la preventa del token SoByen (SBN).*",
+        "buttons": [
             ("✅ Cómo comprar", "comprar"),
-            ("📄 Abrir formulario", "formulario"),
+            ("📄 Abrir formulario whitelist", "formulario"),
             ("💰 Ingresar el monto que desea invertir", "investir"),
-            ("📊 Acceder al panel", "painel")
+            ("📊 Acceder al panel", "painel"),
+            ("✅ Ver contrato del token", "contrato")
         ],
-        "como_comprar": f"🔥 *¡3 PASOS RÁPIDOS PARA OBTENER TUS TOKENS SBN!*\n\n✅ 1. Envía **BNB (Red BSC)** a:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n\n✅ 2. Completa la whitelist:\n{GOOGLE_FORMS_URL}\n\n✅ 3. Recibe tus tokens automáticamente al finalizar la preventa.\n\n⏳ *¡Solo 48h y 500 plazas disponibles!*"
+        "back": "⬅️ Volver",
+        "lang_menu": "🌍 *Elige tu idioma:*",
+        "como_comprar": f"🔥 *¡3 PASOS RÁPIDOS PARA OBTENER TUS TOKENS SBN!*\n\n✅ Envía **BNB (Red BSC)** a:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Completa la whitelist:\n{GOOGLE_FORMS_URL}\n✅ Recibe los tokens al finalizar la preventa.",
+        "contrato_msg": f"✅ *Contrato verificado en BscScan para su seguridad:*\n{BSCSCAN_URL}",
+        "painel_msg": f"📊 Accede al panel de control completo aquí:\n{PAINEL_URL}",
+        "form_msg": f"📄 El formulario se abrirá estandarizado en inglés:\n{GOOGLE_FORMS_URL}",
+        "invest_msg": "💵 *Ingrese el monto que desea invertir (mínimo 1.000 USD y máximo 5.000 USD)* y haga clic en ✅ Enviar Propuesta."
     }
 }
 
-# ==================== FUNÇÕES DO BOT ======================
+# ==================== FLUXO PRINCIPAL ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🇺🇸 English", callback_data="lang_en")],
         [InlineKeyboardButton("🇧🇷 Português", callback_data="lang_pt")],
         [InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "🌍 *Choose your language / Escolha seu idioma / Elige tu idioma:*",
-        parse_mode="Markdown",
-        reply_markup=reply_markup
-    )
+    await update.message.reply_text("🌍 *Choose your language / Escolha seu idioma / Elige tu idioma:*",
+                                    parse_mode="Markdown",
+                                    reply_markup=InlineKeyboardMarkup(keyboard))
 
-async def mostrar_menu(query, idioma, edit=False):
-    msg = mensagens[idioma]["bemvindo"]
-    botoes = mensagens[idioma]["botoes"]
+async def mostrar_menu(query, idioma):
+    msg = mensagens[idioma]["menu"]
+    botoes = mensagens[idioma]["buttons"] + [(mensagens[idioma]["back"], "retornar_lang")]
     keyboard = [[InlineKeyboardButton(txt, callback_data=data)] for txt, data in botoes]
-    keyboard.append([InlineKeyboardButton("↩️ Voltar ao início", callback_data="start")])
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    if edit:
-        await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=reply_markup)
-    else:
-        await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=reply_markup)
+    await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def escolher_idioma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     idioma = query.data.split("_")[1]
     context.user_data["idioma"] = idioma
-    registrar_acao(query.from_user, idioma, "Escolheu idioma")
-    await mostrar_menu(query, idioma, edit=True)
+    await mostrar_menu(query, idioma)
 
+# ==================== CALLBACK BOTÕES ====================
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     idioma = context.user_data.get("idioma", "en")
+    await query.answer()
 
-    if query.data == "formulario":
-        registrar_acao(query.from_user, idioma, "Abriu Formulário")
-        await query.edit_message_text(
-            f"📄 *The form will open in English for global standardization.*\n\n➡️ [Clique aqui para acessar o formulário]({GOOGLE_FORMS_URL})",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ Voltar", callback_data="retornar")]])
-        )
-    elif query.data == "painel":
-        await query.edit_message_text(
-            f"📊 *Acesse o painel completo de controle aqui:* \n\n➡️ {PAINEL_URL}",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ Voltar", callback_data="retornar")]])
-        )
+    if query.data == "comprar":
+        await query.edit_message_text(mensagens[idioma]["como_comprar"], parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(mensagens[idioma]["back"], callback_data="retornar")]]))
+
+    elif query.data == "formulario":
+        await query.edit_message_text(mensagens[idioma]["form_msg"], parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(mensagens[idioma]["back"], callback_data="retornar")]]))
+
     elif query.data == "investir":
-        frases_investir = {
-            "pt": "💵 *Digite o valor que pretende investir (mínimo 1.000 USD e máximo 5.000 USD)*\nExemplo: 1500",
-            "en": "💵 *Enter the amount you want to invest (minimum 1,000 USD and maximum 5,000 USD)*\nExample: 1500",
-            "es": "💵 *Ingrese el monto que desea invertir (mínimo 1.000 USD y máximo 5.000 USD)*\nEjemplo: 1500"
-        }
-        texto_investir = frases_investir.get(idioma, frases_investir["en"])
-        await query.edit_message_text(texto_investir, parse_mode="Markdown",
-                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ Voltar", callback_data="retornar")]]))
-        context.user_data['esperando_valor'] = True
-    elif query.data == "comprar":
-        registrar_acao(query.from_user, idioma, "Clicou Como Comprar")
-        texto_comprar = mensagens.get(idioma, mensagens["en"])["como_comprar"]
-        await query.edit_message_text(texto_comprar, parse_mode="Markdown",
-                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ Voltar", callback_data="retornar")]]))
+        await query.edit_message_text(mensagens[idioma]["invest_msg"], parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Send Proposal / Enviar Proposta", callback_data="esperando_valor")],
+                                                                         [InlineKeyboardButton(mensagens[idioma]["back"], callback_data="retornar")]]))
+
+    elif query.data == "painel":
+        await query.edit_message_text(mensagens[idioma]["painel_msg"], parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(mensagens[idioma]["back"], callback_data="retornar")]]))
+
+    elif query.data == "contrato":
+        await query.edit_message_text(mensagens[idioma]["contrato_msg"], parse_mode="Markdown",
+                                      reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(mensagens[idioma]["back"], callback_data="retornar")]]))
+
     elif query.data == "retornar":
-        await mostrar_menu(query, idioma, edit=True)
-    elif query.data == "start":
-        await mostrar_menu(query, idioma, edit=True)
+        await mostrar_menu(query, idioma)
 
-async def registrar_investimento(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.user_data.get('esperando_valor'):
-        valor = update.message.text
-        idioma = context.user_data.get("idioma", "en")
-        registrar_acao(update.message.from_user, idioma, "Informou Valor", valor)
-        await update.message.reply_text(
-            f"✅ Investimento *{valor}* registrado com sucesso!",
-            parse_mode="Markdown"
-        )
-        context.user_data['esperando_valor'] = False
+    elif query.data == "retornar_lang":
+        await start(update, context)
 
-# ==================== MAIN APP ====================================
+# ==================== MAIN ====================
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(escolher_idioma, pattern="^lang_"))
     app.add_handler(CallbackQueryHandler(button_callback))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, registrar_investimento))
-    print("✅ BOT MULTILÍNGUE ONLINE com painel e botão retornar!")
+    print("✅ BOT atualizado online!")
     app.run_polling()
 
 if __name__ == "__main__":
