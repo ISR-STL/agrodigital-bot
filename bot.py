@@ -19,7 +19,7 @@ if not BOT_TOKEN:
 
 PLANILHA_URL = "https://docs.google.com/spreadsheets/d/1iHuHfXv4JqZG5XIn_GfbeZJXewR0RgW7SgLD5/edit?usp=sharing"
 GOOGLE_FORMS_URL = "https://forms.gle/zVJN3BBuZgzCcGB36"
-PAINEL_URL = "https://agrodigital-panel-git-main-isr-stls-projects.vercel.app/"
+PAINEL_URL = "https://agrodigital5ponto0.com"  # ✅ Agora usa apenas domínio oficial
 BSCSCAN_URL = "https://bscscan.com/address/0x9ea22b56062f5a8e870ffed967987a5a5edf8dd#code"
 
 # ==================== CONEXÃO GOOGLE SHEETS =======================
@@ -57,7 +57,8 @@ mensagens = {
             ("🌍 Change language", "change_lang")
         ],
         "how_to_buy": "🔥 *3 STEPS TO BUY SBN TOKENS!*\n\n✅ Send **BNB (BSC Network)** to:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Fill the whitelist here:\n{GOOGLE_FORMS_URL}\n✅ Tokens will be distributed after pre-sale.\n⏳ *Only 48h and 500 spots!*",
-        "enter_value": "💵 *Enter the amount you want to invest (min 100 USD)*"
+        "enter_value": "💵 *Enter the amount you want to invest (min 100 USD)*",
+        "default_reply": "🤖 I didn’t understand your message, but here’s the main menu again 👇"
     },
     "pt": {
         "welcome": "🌍 Bem-vindo(a) ao *AgroDigital Club*!\n\n🚀 Aqui você encontra oportunidades exclusivas no agronegócio digital.\n\n💡 *Participe da pré-venda do token SoByen (SBN) e garanta sua posição estratégica no mercado.*\n\nEscolha uma opção abaixo 👇",
@@ -70,7 +71,8 @@ mensagens = {
             ("🌍 Alterar idioma", "change_lang")
         ],
         "how_to_buy": "🔥 *3 PASSOS PARA COMPRAR SEUS TOKENS SBN!*\n\n✅ Envie **BNB (Rede BSC)** para:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Preencha a whitelist:\n{GOOGLE_FORMS_URL}\n✅ Receba os tokens após o fim da pré-venda.\n⏳ *Somente 48h e 500 vagas!*",
-        "enter_value": "💵 *Digite o valor que deseja investir (mínimo 100 USD)*"
+        "enter_value": "💵 *Digite o valor que deseja investir (mínimo 100 USD)*",
+        "default_reply": "🤖 Não entendi sua mensagem, mas aqui está o menu principal novamente 👇"
     },
     "es": {
         "welcome": "🌍 ¡Bienvenido(a) a *AgroDigital Club*!\n\n🚀 Aquí encontrará oportunidades exclusivas en el agronegocio digital.\n\n💡 *Participe en la preventa del token SoByen (SBN) y asegure su posición estratégica en el mercado.*\n\nSeleccione una opción abajo 👇",
@@ -83,7 +85,8 @@ mensagens = {
             ("🌍 Cambiar idioma", "change_lang")
         ],
         "how_to_buy": "🔥 *¡3 PASOS PARA COMPRAR TUS TOKENS SBN!*\n\n✅ Envía **BNB (Red BSC)** a:\n`0x0d5B9634F1C33684C9d2606109B391301b95f002`\n✅ Completa la whitelist:\n{GOOGLE_FORMS_URL}\n✅ Recibe los tokens al finalizar la preventa.\n⏳ *¡Solo 48h y 500 plazas!*",
-        "enter_value": "💵 *Ingrese el monto que desea invertir (mínimo 100 USD)*"
+        "enter_value": "💵 *Ingrese el monto que desea invertir (mínimo 100 USD)*",
+        "default_reply": "🤖 No entendí tu mensaje, pero aquí está el menú principal nuevamente 👇"
     }
 }
 
@@ -99,17 +102,35 @@ async def show_menu(update_or_query, idioma, edit=False):
     else:
         await update_or_query.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
 
+# ==================== ESCOLHA DE IDIOMA ========================
+async def ask_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🇺🇸 English", callback_data="set_lang_en")],
+        [InlineKeyboardButton("🇧🇷 Português", callback_data="set_lang_pt")],
+        [InlineKeyboardButton("🇪🇸 Español", callback_data="set_lang_es")]
+    ]
+    await update.message.reply_text(
+        "🌍 *Choose your language / Escolha seu idioma / Elige tu idioma:*",
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
 # ==================== START COMMAND ===========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # idioma padrão inglês
-    context.user_data["idioma"] = "en"
-    await show_menu(update, "en")
+    # ✅ Agora sempre pede idioma primeiro
+    await ask_language(update, context)
 
 # ==================== CALLBACK BUTTONS ========================
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     idioma = context.user_data.get("idioma", "en")
+
+    if query.data.startswith("set_lang_"):
+        new_lang = query.data.replace("set_lang_", "")
+        context.user_data["idioma"] = new_lang
+        await show_menu(query, new_lang, edit=True)
+        return
 
     if query.data == "how_to_buy":
         await query.edit_message_text(
@@ -144,31 +165,27 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif query.data == "change_lang":
-        keyboard = [
-            [InlineKeyboardButton("🇺🇸 English", callback_data="set_lang_en")],
-            [InlineKeyboardButton("🇧🇷 Português", callback_data="set_lang_pt")],
-            [InlineKeyboardButton("🇪🇸 Español", callback_data="set_lang_es")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="back_menu")]
-        ]
-        await query.edit_message_text("🌍 Select your language:", reply_markup=InlineKeyboardMarkup(keyboard))
-
-    elif query.data.startswith("set_lang_"):
-        new_lang = query.data.replace("set_lang_", "")
-        context.user_data["idioma"] = new_lang
-        await show_menu(query, new_lang, edit=True)
+        await ask_language(update, context)
 
     elif query.data == "back_menu":
         await show_menu(query, idioma, edit=True)
 
 # ==================== AMOUNT MESSAGE ==========================
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    idioma = context.user_data.get("idioma", "en")
+
+    # ✅ Se o bot está aguardando um valor
     if context.user_data.get("awaiting_amount"):
         amount = update.message.text.strip()
-        idioma = context.user_data.get("idioma", "en")
         registrar_acao(update.message.from_user, idioma, "Investimento", amount)
         await update.message.reply_text(f"✅ Investment of {amount} USD recorded successfully!")
         context.user_data['awaiting_amount'] = False
         await show_menu(update, idioma)
+        return
+
+    # ✅ Resposta para mensagens soltas
+    await update.message.reply_text(mensagens[idioma]["default_reply"])
+    await show_menu(update, idioma)
 
 # ==================== MAIN ============================
 def main():
